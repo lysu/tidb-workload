@@ -1,14 +1,11 @@
 package com.pingcap.tidb.workload;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.sql.DataSource;
+import com.baidu.fsg.uid.UidGenerator;
+import com.baidu.fsg.uid.impl.DefaultUidGenerator;
+import com.baidu.fsg.uid.worker.DisposableWorkerIdAssigner;
+import com.baidu.fsg.uid.worker.WorkerIdAssigner;
+import com.baidu.fsg.uid.worker.dao.WorkerNodeDAO;
+import com.baidu.fsg.uid.worker.entity.WorkerNodeEntity;
 
 public class Test {
 

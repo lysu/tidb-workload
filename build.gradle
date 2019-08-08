@@ -56,6 +56,7 @@ dependencies {
             "org.apache.commons:commons-dbcp2:2.4.0"
     )
     compile files("${System.properties['java.home']}/../lib/tools.jar")
+    compile files("lib/uid-generator-1.0.0.jar")
 
     // All the package definition that need to ignore.
     configurations {
