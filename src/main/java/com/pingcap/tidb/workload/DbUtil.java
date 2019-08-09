@@ -35,4 +35,8 @@ public class DbUtil {
     public Connection getConnection() throws SQLException {
         return bds.getConnection();
     }
+
+    public void closeConnection(Connection conn) throws SQLException {
+        conn.close();
+    }
 }

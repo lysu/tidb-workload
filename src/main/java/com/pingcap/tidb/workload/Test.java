@@ -9,21 +9,42 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
+import javax.annotation.PostConstruct;
 
 public class Test {
-
-
+    @PostConstruct
     public void test() throws Exception {
-        int concurrency = 10;
-        int repeat = 500000;
-        UidGenerator uidGenerator = new UidGenerator(30, 20, 14);
+        int concurrency = 100;
+        int repeat = 20000;
+
         long start = System.currentTimeMillis();
         CountDownLatch wg = new CountDownLatch(concurrency);
+        IDGenerator[] generators = new IDGenerator[concurrency];
+        CountDownLatch tmpwg = new CountDownLatch(concurrency);
+        final UidGenerator uidGenerator = new UidGenerator(30, 20, 13);
+        uidGenerator.setWorkerId(1);
+        for (int i = 0; i < concurrency; i++) {
+            final int threadID = i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        generators[threadID] = new IDGenerator(uidGenerator, repeat);
+                    } catch (Exception e) {
+                        System.err.println(e);
+                    } finally {
+                        tmpwg.countDown();
+                    }
+                }
+            }).start();
+        }
+        tmpwg.await();
+
         for (int i = 0; i < concurrency; i++) {
             final int threadID = i;
             new Thread(new Runnable() {
                 PrimaryIDCache idCache = new PrimaryIDCache();
-                IDGenerator idGenerator = new IDGenerator(uidGenerator, repeat);
+                IDGenerator idGenerator = generators[threadID];
 
                 @Override
                 public void run() {
@@ -117,17 +138,22 @@ public class Test {
     public int mixSelectAfterInsertTest(int repeat, PrimaryIDCache idCache, IDGenerator idGenerator)
         throws Exception {
         int insertCount = 0;
-        try (Connection connection = DbUtil.getInstance().getConnection();
-            final PreparedStatement inPstmt = connection.prepareStatement(insertSQL);
-            final PreparedStatement selPstmt = connection.prepareStatement(selectSQL)) {
-            for (int i = 0; i < repeat; i++) {
+        for (int i = 0; i < repeat; i++) {
+            Connection conn = null;
+            try {
+                conn = DbUtil.getInstance().getConnection();
+
+                final PreparedStatement inPstmt = conn.prepareStatement(insertSQL);
+                final PreparedStatement selPstmt = conn.prepareStatement(selectSQL);
+                final PreparedStatement updateStmt = conn.prepareStatement(updateSQL);
+
                 PrimaryID pid = getRowIds(i, idCache, idGenerator);
                 // select
                 selPstmt.setLong(1, pid.userId);
                 selPstmt.setLong(2, pid.orderId);
                 ResultSet resultSet = selPstmt.executeQuery();
                 if (resultSet.next()) {
-                    final PreparedStatement updateStmt = connection.prepareStatement(updateSQL);
+
                     updateStmt.setLong(1, idGenerator.getTxnId()); // txn_id
                     updateStmt.setLong(2, pid.userId); //user_id
                     updateStmt.setString(3, "txn_type");
@@ -174,6 +200,7 @@ public class Test {
                     updateStmt.setLong(44, pid.orderId); // order_id
                     updateStmt.execute();
                     updateStmt.clearParameters();
+
                 } else {
                     // insert
                     inPstmt.setLong(1, idGenerator.getTxnId()); // txn_id
@@ -225,8 +252,19 @@ public class Test {
                     insertCount++;
                 }
                 resultSet.close();
+            } catch (Exception e) {
+                System.out.println(e);
+            } finally {
+                DbUtil.getInstance().closeConnection(conn);
             }
         }
+
+//        try (Connection connection = dataSource.getConnection();
+//             final PreparedStatement inPstmt = connection.prepareStatement(insertSQL);
+//             final PreparedStatement selPstmt = connection.prepareStatement(selectSQL);
+//             final PreparedStatement updateStmt = connection.prepareStatement(updateSQL)) {
+//
+//        }
 
         return insertCount;
     }
@@ -268,9 +306,7 @@ public class Test {
         ArrayList<Long> paymentIds = new ArrayList<>();
 
         public IDGenerator(UidGenerator uidGenerator, int repeat) {
-            IntStream.range(0, repeat + 10).mapToLong(id -> {
-                return uidGenerator.getUID();
-            }).peek(lid -> {
+            IntStream.range(0, repeat + 10).mapToLong(id -> uidGenerator.getUID()).peek(lid -> {
                 txnIds.add(lid);
             }).peek(lid -> {
                 paymentIds.add(lid + +new Random().nextInt(10000000));
