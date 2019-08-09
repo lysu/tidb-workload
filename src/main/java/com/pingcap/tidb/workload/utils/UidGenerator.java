@@ -2,11 +2,11 @@ package com.pingcap.tidb.workload.utils;
 
 import java.util.concurrent.TimeUnit;
 
-public class IDGenerator {
+public class UidGenerator {
 
-    private static final int timeBits = 28;
-    private static final int workerBits = 22;
-    private static final int seqBits = 13;
+    private  int timeBits = 28;
+    private  int workerBits = 22;
+    private  int seqBits = 13;
 
     private long epochSeconds;
     private BitsAllocator bitsAllocator;
@@ -14,7 +14,10 @@ public class IDGenerator {
     private long sequence;
     private long lastSecond;
 
-    public IDGenerator() {
+    public UidGenerator(int timeBits, int workerBits, int seqBits) {
+        this.timeBits = timeBits;
+        this.workerBits = workerBits;
+        this.seqBits = seqBits;
         this.bitsAllocator = new BitsAllocator(timeBits, workerBits, seqBits);
         this.epochSeconds = TimeUnit.MILLISECONDS.toSeconds(1463673600000L);
         this.sequence = 0L;
