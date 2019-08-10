@@ -29,7 +29,7 @@ public class DbUtil {
         bds.setInitialSize(3);
         bds.setMaxWaitMillis(3000);
         bds.setMaxIdle(20);
-        bds.setMaxTotal(100);
+        bds.setMaxTotal(-1);
     }
 
     public Connection getConnection() throws SQLException {
