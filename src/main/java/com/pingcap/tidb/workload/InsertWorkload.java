@@ -114,13 +114,13 @@ public class InsertWorkload {
             inPstmt.setLong(32, 1); // merchant_cat
             inPstmt.setLong(33, 2); // merchant_cat_sub
             inPstmt.setString(34, "s1"); // store_id
-            inPstmt.setString(35, "store x"); // store_name
+            inPstmt.setString(35, "store xaaefec"); // store_name
             inPstmt.setString(36, "pos1");// pos_id
             inPstmt.setLong(37, 1);// biller_id
             inPstmt.setString(38, "http://11.com/1");// logo_url
             inPstmt.setLong(39, 2);// peer_id
             inPstmt.setString(40, "p1");// peer_name
-            inPstmt.setLong(41, 99);// device_id
+            inPstmt.setString(41, "abcdssssssssssssseeeeeeeeeeeeeeeeeeffffffffffffabcdssssssssssssseeeeeeeeeeeeeeeeeeffffffffffff");// device_id
             inPstmt.setString(42, "{}");// extra_info
 
             inPstmt.addBatch();
