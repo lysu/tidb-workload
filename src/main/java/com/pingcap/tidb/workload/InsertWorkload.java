@@ -40,13 +40,13 @@ public class InsertWorkload {
                     final PreparedStatement inPstmt = conn.prepareStatement(insertSQL);
                     long repeat = 0;
                     while (true) {
-                        if (repeat % 10000 ==0) {
-                            System.out.println(Thread.currentThread().getId() +"  " +new Date() + "  add batch done" );
-                        }
                         try {
                             insert(inPstmt, uidGenerator);
                         }catch (Exception e) {
                             e.printStackTrace();
+                        }
+                        if (repeat % 10000 ==0) {
+                            System.out.println(Thread.currentThread().getId() +"  " +new Date() + "  add batch done" );
                         }
                         repeat ++;
                     }
