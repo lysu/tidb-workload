@@ -52,7 +52,7 @@ dependencies {
     compile(
             "commons-cli:commons-cli:1.2",
             "org.json:json:20070829",
-            "mysql:mysql-connector-java:5.1.38",
+            "mysql:mysql-connector-java:8.0.15",
             "org.apache.commons:commons-dbcp2:2.4.0"
     )
 
