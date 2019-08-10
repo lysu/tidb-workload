@@ -145,7 +145,7 @@ public class Test {
 //                conn.setAutoCommit(false);
                     final PreparedStatement inPstmt = conn.prepareStatement(insertSQL);
 //                final PreparedStatement selPstmt = conn.prepareStatement(selectSQL);
-                    final PreparedStatement updateStmt = conn.prepareStatement(updateSQL);
+//                    final PreparedStatement updateStmt = conn.prepareStatement(updateSQL);
 
                     PrimaryID pid = getRowIds(i, idCache, idGenerator);
                     insert(inPstmt, idGenerator, pid);
@@ -219,11 +219,11 @@ public class Test {
 
 
     public PrimaryID getRowIds(int cycleIndex, PrimaryIDCache idCache, IDGenerator idGenerator) {
-        if (cycleIndex % 2 == 0) {
+//        if (cycleIndex % 2 == 0) {
             return idGenerator.getPrimaryID();
-        } else {
-            return idCache.getRandom();
-        }
+//        } else {
+//        return idCache.getRandom();
+//        }
     }
 
 
@@ -515,7 +515,7 @@ public class Test {
         if (conn != null) {
             try {
                 DbUtil.getInstance().closeConnection(conn);
-                conn.close();
+//                conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
