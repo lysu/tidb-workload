@@ -163,9 +163,10 @@ public class Test {
         return insertCount;
     }
 
+    public static int BATCH_SIZE = 10;
     public void insert(PreparedStatement inPstmt, IDGenerator idGenerator, PrimaryID pid)
         throws SQLException {
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < BATCH_SIZE; i++) {
             inPstmt.setLong(1, idGenerator.getTxnId()); // txn_id
             inPstmt.setLong(2, pid.userId); //user_id
             inPstmt.setString(3, "txn_type");
@@ -256,7 +257,7 @@ public class Test {
         ArrayList<Long> paymentIds = new ArrayList<>();
 
         public IDGenerator(UidGenerator uidGenerator, int repeat) {
-            IntStream.range(0, repeat * 10 + 10).mapToLong(id -> uidGenerator.getUID())
+            IntStream.range(0, repeat * BATCH_SIZE + 10).mapToLong(id -> uidGenerator.getUID())
                 .peek(lid -> {
                     txnIds.add(lid);
                 }).peek(lid -> {
