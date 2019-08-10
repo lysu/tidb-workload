@@ -5,12 +5,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 public class InsertWorkload {
 
     private static final String insertSQL =
-        "insert into txn_history(txn_id, user_id, txn_type, txn_state, txn_order_amount, txn_order_currency, txn_charge_amount, "
+        "insert into txn_history_mock(txn_id, user_id, txn_type, txn_state, txn_order_amount, txn_order_currency, txn_charge_amount, "
             +
             "txn_charge_currency, txn_exchange_amount, txn_exchange_currency, txn_promo_amount, txn_promo_currency, "
             +
@@ -27,10 +28,10 @@ public class InsertWorkload {
             "?, ?, now(), now(), now(), ?, ?, ?, ?, ?, now(), now(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 
-    public static void workload(int workId, int concurrency) {
+    public static void workload(int concurrency) {
         CountDownLatch tmpwg = new CountDownLatch(concurrency);
-        final UidGenerator uidGenerator = new UidGenerator(30, 20, 13);
-        uidGenerator.setWorkerId(workId);
+//        final UidGenerator uidGenerator = new UidGenerator(30, 20, 13);
+//        uidGenerator.setWorkerId(workId);
         for (int i = 0; i < concurrency; i++) {
             final int threadID = i;
             new Thread(() -> {
@@ -41,7 +42,7 @@ public class InsertWorkload {
                     long repeat = 0;
                     while (true) {
                         try {
-                            insert(inPstmt, uidGenerator);
+                            insert(inPstmt);
                         }catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -71,11 +72,12 @@ public class InsertWorkload {
         }
     }
 
-    public static int BATCH_SIZE = 200;
-    public static  void insert(PreparedStatement inPstmt, UidGenerator uidGenerator)
+    static Random r = new Random();
+    public static int BATCH_SIZE = 1024;
+    public static  void insert(PreparedStatement inPstmt)
         throws SQLException {
         for (int i = 0; i < BATCH_SIZE; i++) {
-            long txnId = uidGenerator.getUID();
+            long txnId = r.nextLong();
             long userId = txnId;
             long orderId = txnId;
 //            long paymentId = uidGenerator.getUID();
