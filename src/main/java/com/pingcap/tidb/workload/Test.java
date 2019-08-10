@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
@@ -43,9 +44,11 @@ public class Test {
                 new Thread(new Runnable() {
                     PrimaryIDCache idCache = new PrimaryIDCache();
                     IDGenerator idGenerator = generators[threadID];
+                    final UidGenerator uidGenerator = new UidGenerator(30, 20, 13);
 
                     @Override
                     public void run() {
+                        uidGenerator.setWorkerId(workId + 100 + threadID);
                         System.out.println("thread " + threadID + " start");
                         try {
                             System.out.println(
@@ -140,16 +143,19 @@ public class Test {
         Connection conn = null;
         try {
             conn = getConnection();
+            final PreparedStatement inPstmt = conn.prepareStatement(insertSQL);
             for (int i = 0; i < repeat; i++) {
                 try {
 //                conn.setAutoCommit(false);
-                    final PreparedStatement inPstmt = conn.prepareStatement(insertSQL);
 //                final PreparedStatement selPstmt = conn.prepareStatement(selectSQL);
 //                    final PreparedStatement updateStmt = conn.prepareStatement(updateSQL);
 
                     PrimaryID pid = getRowIds(i, idCache, idGenerator);
                     insert(inPstmt, idGenerator, pid);
                     insertCount++;
+                    if (repeat % 500 ==0) {
+                        System.out.println(Thread.currentThread().getId() +"  " +new Date() + "  add batch done" );
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
