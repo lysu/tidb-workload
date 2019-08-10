@@ -45,7 +45,7 @@ public class InsertWorkload {
                         }catch (Exception e) {
                             e.printStackTrace();
                         }
-                        if (repeat % 10000 ==0) {
+                        if (repeat % 2000 ==0) {
                             System.out.println(Thread.currentThread().getId() +"  " +new Date() + "  add batch done" );
                         }
                         repeat ++;
