@@ -1,6 +1,5 @@
 package com.pingcap.tidb.workload;
 
-import com.pingcap.tidb.workload.utils.UidGenerator;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -72,9 +71,9 @@ public class InsertWorkload {
         }
     }
 
-    static Random r = new Random();
-    public static int BATCH_SIZE = 1024;
-    public static  void insert(PreparedStatement inPstmt)
+    private static Random r = new Random();
+    private static int BATCH_SIZE = 200;
+    private static  void insert(PreparedStatement inPstmt)
         throws SQLException {
         for (int i = 0; i < BATCH_SIZE; i++) {
             long txnId = r.nextLong();
