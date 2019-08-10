@@ -153,7 +153,7 @@ public class Test {
                     PrimaryID pid = getRowIds(i, idCache, idGenerator);
                     insert(inPstmt, idGenerator, pid);
                     insertCount++;
-                    if (repeat % 500 ==0) {
+                    if (repeat % 2000 ==0) {
                         System.out.println(Thread.currentThread().getId() +"  " +new Date() + "  add batch done" );
                     }
                 } catch (Exception e) {
