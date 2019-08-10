@@ -1,12 +1,11 @@
 package com.pingcap.tidb.workload;
 
-import com.pingcap.tidb.workload.Test.IDGenerator;
-import com.pingcap.tidb.workload.Test.PrimaryID;
 import com.pingcap.tidb.workload.utils.UidGenerator;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.concurrent.CountDownLatch;
 
 public class InsertWorkload {
 
@@ -29,6 +28,7 @@ public class InsertWorkload {
 
 
     public static void workload(int workId, int concurrency) {
+        CountDownLatch tmpwg = new CountDownLatch(concurrency);
         for (int i = 0; i < concurrency; i++) {
             final int threadID = i;
             new Thread(() -> {
@@ -43,12 +43,17 @@ public class InsertWorkload {
                         if (repeat % 10000 ==0) {
                             System.out.println(Thread.currentThread().getId() +"  " +new Date() + "  add batch done" );
                         }
-                        insert(inPstmt, uidGenerator);
+                        try {
+                            insert(inPstmt, uidGenerator);
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         repeat ++;
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
+                    tmpwg.countDown();
                     try {
                         if (conn != null) {
                             DbUtil.getInstance().closeConnection(conn);
@@ -58,6 +63,11 @@ public class InsertWorkload {
                     }
                 }
             }).start();
+        }
+        try {
+            tmpwg.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
