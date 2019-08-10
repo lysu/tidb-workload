@@ -29,11 +29,11 @@ public class InsertWorkload {
 
     public static void workload(int workId, int concurrency) {
         CountDownLatch tmpwg = new CountDownLatch(concurrency);
+        final UidGenerator uidGenerator = new UidGenerator(30, 20, 13);
+        uidGenerator.setWorkerId(workId);
         for (int i = 0; i < concurrency; i++) {
             final int threadID = i;
             new Thread(() -> {
-                final UidGenerator uidGenerator = new UidGenerator(30, 20, 13);
-                uidGenerator.setWorkerId(workId + 100 + threadID);
                 Connection conn = null;
                 try {
                     conn = DbUtil.getInstance().getConnection();
