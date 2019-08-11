@@ -93,10 +93,11 @@ public class UpdateWorkload {
         + "peer_id=?, peer_name=?, device_id=?, "
         + "extra_info=? where user_id =? and order_id =? ";
 
-    private long[] userIds = new long[100000];
-    private long[] orderIds = new long[100000];
-    private long[] txnIds = new long[100000];
-    private long[] paymentIds = new long[100000];
+    private final static int updateSize = 10000;
+    private long[] userIds = new long[updateSize];
+    private long[] orderIds = new long[updateSize];
+    private long[] txnIds = new long[updateSize];
+    private long[] paymentIds = new long[updateSize];
 
     private void updateTest(int workId, int concurrency, int repeat, String tableName)
         throws Exception {
@@ -104,96 +105,81 @@ public class UpdateWorkload {
         uidGenerator.setWorkerId(workId);
         long start = System.currentTimeMillis();
         System.out.println("start to insert base data");
+        Connection conn = null;
 
-        for (int i = 0; i < userIds.length; i++) {
-            userIds[i] = uidGenerator.getUID();
-            orderIds[i] = uidGenerator.getUID();
-            txnIds[i] = uidGenerator.getUID();
-            paymentIds[i] = uidGenerator.getUID();
+        try {
+            conn = getConnection();
+            final PreparedStatement inPstmt = conn
+                .prepareStatement(String.format(insertSQL, tableName));
+
+            for (int i = 0; i < userIds.length; i++) {
+                userIds[i] = uidGenerator.getUID();
+                orderIds[i] = uidGenerator.getUID();
+                txnIds[i] = uidGenerator.getUID();
+                paymentIds[i] = uidGenerator.getUID();
+
+                int index = i;
+                long txnId = txnIds[index];
+                long userId = userIds[index];
+                long orderId = orderIds[index];
+                long paymentId = paymentIds[index];
+                inPstmt.setLong(1, txnId); // txn_id
+                inPstmt.setLong(2, userId); //user_id
+                inPstmt.setString(3, "txn_type");
+                inPstmt.setString(4, "txn_state");
+                inPstmt.setLong(5, 100); // txn_order_amount
+                inPstmt.setString(6, "txn_order_currency");
+                inPstmt.setLong(7, 1000); // txn_charge_amount
+                inPstmt.setString(8, "JPY"); // txn_charge_currency
+                inPstmt.setLong(9, 10);// txn_exchange_amount
+                inPstmt.setString(10, "JPY"); // txn_exchange_currency
+                inPstmt.setLong(11, 9);// txn_promo_amount
+                inPstmt.setString(12, "JPY"); // txn_promo_currency
+                inPstmt.setInt(13, 0); // disabled
+                inPstmt.setInt(14, 1); // version
+                inPstmt.setLong(15, orderId); // order_id
+                inPstmt.setString(16, "started"); // order_state
+                inPstmt.setString(17, "code1"); // order_error_code
+                inPstmt.setString(18, "type1"); // order_type
+                inPstmt.setLong(19, 4); // order_version
+                inPstmt.setString(20, "{}");// order_items
+                inPstmt.setLong(21, paymentId); // payment_id
+                inPstmt.setLong(22, 5); // payment_version
+                inPstmt.setString(23, "paid");// payment_state
+                inPstmt.setString(24, "c1");// payment_error_code
+                inPstmt.setString(25, "{}");// comments
+                inPstmt.setString(26, "{}");// sub_payments
+                inPstmt.setLong(27, 1); // cd_amount
+                inPstmt.setString(28, "done"); // cb_state
+                inPstmt.setInt(29, 1); // cb_version
+                inPstmt.setInt(30, 1000); // merchant_id
+                inPstmt.setString(31, "mname"); // merchant_name
+                inPstmt.setLong(32, 1); // merchant_cat
+                inPstmt.setLong(33, 2); // merchant_cat_sub
+                inPstmt.setString(34, "s1"); // store_id
+                inPstmt.setString(35, "store x"); // store_name
+                inPstmt.setString(36, "pos1");// pos_id
+                inPstmt.setLong(37, 1);// biller_id
+                inPstmt.setString(38, "http://11.com/1");// logo_url
+                inPstmt.setLong(39, 2);// peer_id
+                inPstmt.setString(40, "p1");// peer_name
+                inPstmt.setLong(41, 99);// device_id
+                inPstmt.setString(42, "{}");// extra_info
+                inPstmt.execute();
+                inPstmt.clearParameters();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            closeConnection(conn);
         }
-        System.out.println("ids  generation done");
-
-        int threadPoolSize = 100;
-        CountDownLatch insertGroup = new CountDownLatch(threadPoolSize);
-        for (int c = 0; c < threadPoolSize; c++) {
-            final int threadId = c;
-            new Thread(() -> {
-                Connection conn = null;
-                try {
-                    conn = getConnection();
-                    final PreparedStatement inPstmt = conn
-                        .prepareStatement(String.format(insertSQL, tableName));
-                    System.out.println(threadId);
-                    for (int i = 0; i < userIds.length / threadPoolSize; i++) {
-                        try {
-                            int index = threadId * (userIds.length / threadPoolSize) + i;
-                            long txnId = txnIds[index];
-                            long userId = userIds[index];
-                            long orderId = orderIds[index];
-                            long paymentId = paymentIds[index];
-                            inPstmt.setLong(1, txnId); // txn_id
-                            inPstmt.setLong(2, userId); //user_id
-                            inPstmt.setString(3, "txn_type");
-                            inPstmt.setString(4, "txn_state");
-                            inPstmt.setLong(5, 100); // txn_order_amount
-                            inPstmt.setString(6, "txn_order_currency");
-                            inPstmt.setLong(7, 1000); // txn_charge_amount
-                            inPstmt.setString(8, "JPY"); // txn_charge_currency
-                            inPstmt.setLong(9, 10);// txn_exchange_amount
-                            inPstmt.setString(10, "JPY"); // txn_exchange_currency
-                            inPstmt.setLong(11, 9);// txn_promo_amount
-                            inPstmt.setString(12, "JPY"); // txn_promo_currency
-                            inPstmt.setInt(13, 0); // disabled
-                            inPstmt.setInt(14, 1); // version
-                            inPstmt.setLong(15, orderId); // order_id
-                            inPstmt.setString(16, "started"); // order_state
-                            inPstmt.setString(17, "code1"); // order_error_code
-                            inPstmt.setString(18, "type1"); // order_type
-                            inPstmt.setLong(19, 4); // order_version
-                            inPstmt.setString(20, "{}");// order_items
-                            inPstmt.setLong(21, paymentId); // payment_id
-                            inPstmt.setLong(22, 5); // payment_version
-                            inPstmt.setString(23, "paid");// payment_state
-                            inPstmt.setString(24, "c1");// payment_error_code
-                            inPstmt.setString(25, "{}");// comments
-                            inPstmt.setString(26, "{}");// sub_payments
-                            inPstmt.setLong(27, 1); // cd_amount
-                            inPstmt.setString(28, "done"); // cb_state
-                            inPstmt.setInt(29, 1); // cb_version
-                            inPstmt.setInt(30, 1000); // merchant_id
-                            inPstmt.setString(31, "mname"); // merchant_name
-                            inPstmt.setLong(32, 1); // merchant_cat
-                            inPstmt.setLong(33, 2); // merchant_cat_sub
-                            inPstmt.setString(34, "s1"); // store_id
-                            inPstmt.setString(35, "store x"); // store_name
-                            inPstmt.setString(36, "pos1");// pos_id
-                            inPstmt.setLong(37, 1);// biller_id
-                            inPstmt.setString(38, "http://11.com/1");// logo_url
-                            inPstmt.setLong(39, 2);// peer_id
-                            inPstmt.setString(40, "p1");// peer_name
-                            inPstmt.setLong(41, 99);// device_id
-                            inPstmt.setString(42, "{}");// extra_info
-                            inPstmt.execute();
-                            inPstmt.clearParameters();
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    closeConnection(conn);
-                    insertGroup.countDown();
-                }
-            }).start();
-        }
-        insertGroup.await();
 
         System.out.println("insert data done: " + (System.currentTimeMillis() - start) + "ms");
 
         CountDownLatch tmpwg = new CountDownLatch(concurrency);
-        for (int i = 0; i < concurrency; i++) {
+        for (
+            int i = 0;
+            i < concurrency; i++) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {

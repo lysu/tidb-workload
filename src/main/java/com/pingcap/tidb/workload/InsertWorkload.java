@@ -9,6 +9,18 @@ import java.util.concurrent.CountDownLatch;
 
 public class InsertWorkload {
 
+    public static void main(String[] args) {
+        DbUtil.getInstance().initConnectionPool("jdbc:mysql://aa7e48fbcb9a811e9bc3e0e05a91079b-ed3b031e6d68faca.elb.ap-northeast-1.amazonaws.com:4000/test?useunicode=true&characterEncoding=utf8&rewriteBatchedStatements=true", "root", "");
+        int concurrency=Integer.parseInt(args[0]);
+//        boolean update = "update".equalsIgnoreCase(args[1]);
+//        int concurrency = Integer.parseInt(args[2]);
+//        int repeat = Integer.parseInt(args[3]);
+//        new Test().test(workId, concurrency, repeat, update);
+
+//        int concurrency = Integer.parseInt(args[1]);
+        InsertWorkload.workload(concurrency);
+    }
+
     private static final String insertSQL =
         "insert into txn_history_mock2(txn_id, user_id, txn_type, txn_state, txn_order_amount, txn_order_currency, txn_charge_amount, "
             +
@@ -90,7 +102,7 @@ public class InsertWorkload {
     }
 
     private static Random r = new Random();
-    public static int BATCH_SIZE = 400;
+    public static int BATCH_SIZE = 100;
     private static  void insert(PreparedStatement inPstmt, long txnId)
         throws SQLException {
         for (int i = 0; i < BATCH_SIZE; i++) {
