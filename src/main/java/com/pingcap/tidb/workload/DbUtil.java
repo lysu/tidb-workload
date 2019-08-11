@@ -37,6 +37,10 @@ public class DbUtil {
     }
 
     public void closeConnection(Connection conn) throws SQLException {
-        conn.close();
+        try {
+            conn.close();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

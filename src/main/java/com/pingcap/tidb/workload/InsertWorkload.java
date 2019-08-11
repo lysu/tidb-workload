@@ -10,7 +10,25 @@ import java.util.concurrent.CountDownLatch;
 public class InsertWorkload {
 
     private static final String insertSQL =
-        "insert into txn_history_mock(txn_id, user_id, txn_type, txn_state, txn_order_amount, txn_order_currency, txn_charge_amount, "
+        "insert into txn_history_mock2(txn_id, user_id, txn_type, txn_state, txn_order_amount, txn_order_currency, txn_charge_amount, "
+            +
+            "txn_charge_currency, txn_exchange_amount, txn_exchange_currency, txn_promo_amount, txn_promo_currency, "
+            +
+            "disabled, version, order_id, order_state, order_error_code, order_type, order_created_at, order_updated_at, order_version, order_items, "
+            +
+            "payment_id, payment_created_at, payment_updated_at, payment_paid_at, payment_version, payment_state, payment_error_code, comments, sub_payments, "
+            +
+            "cb_amount, cb_state, cb_release_date, cb_created_at, cb_updated_at, cb_version, merchant_id, merchant_name, merchant_cat, merchant_sub_cat, created_at, updated_at,"
+            +
+            "store_id, store_name, pos_id, biller_id, logo_url, peer_id, peer_name, device_id, extra_info) "
+            +
+            "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?, ?, now(), now(), now(), ?, ?, ?, ?, ?, "
+            +
+            "?, ?, now(), now(), now(), ?, ?, ?, ?, ?, now(), now(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+
+    private static final String insertSQL_origin =
+        "insert into txn_history(txn_id, user_id, txn_type, txn_state, txn_order_amount, txn_order_currency, txn_charge_amount, "
             +
             "txn_charge_currency, txn_exchange_amount, txn_exchange_currency, txn_promo_amount, txn_promo_currency, "
             +
@@ -29,21 +47,21 @@ public class InsertWorkload {
 
     public static void workload(int concurrency) {
         CountDownLatch tmpwg = new CountDownLatch(concurrency);
-//        final UidGenerator uidGenerator = new UidGenerator(30, 20, 13);
-//        uidGenerator.setWorkerId(workId);
         for (int i = 0; i < concurrency; i++) {
-            final int threadID = i;
             new Thread(() -> {
                 Connection conn = null;
                 try {
                     conn = DbUtil.getInstance().getConnection();
-                    final PreparedStatement inPstmt = conn.prepareStatement(insertSQL);
+                    PreparedStatement inPstmt = conn.prepareStatement(insertSQL);
                     long repeat = 0;
                     while (true) {
                         try {
-                            insert(inPstmt);
+                            insert(inPstmt, r.nextLong());
                         }catch (Exception e) {
                             e.printStackTrace();
+                            DbUtil.getInstance().closeConnection(conn);
+                            conn = DbUtil.getInstance().getConnection();
+                            inPstmt = conn.prepareStatement(insertSQL);
                         }
                         if (repeat % 2000 ==0) {
                             System.out.println(Thread.currentThread().getId() +"  " +new Date() + "  add batch done" );
@@ -72,11 +90,11 @@ public class InsertWorkload {
     }
 
     private static Random r = new Random();
-    private static int BATCH_SIZE = 200;
-    private static  void insert(PreparedStatement inPstmt)
+    public static int BATCH_SIZE = 400;
+    private static  void insert(PreparedStatement inPstmt, long txnId)
         throws SQLException {
         for (int i = 0; i < BATCH_SIZE; i++) {
-            long txnId = r.nextLong();
+//            long txnId = r.nextLong();
             long userId = txnId;
             long orderId = txnId;
 //            long paymentId = uidGenerator.getUID();
@@ -111,22 +129,24 @@ public class InsertWorkload {
             inPstmt.setString(28, "done"); // cb_state
             inPstmt.setInt(29, 1); // cb_version
             inPstmt.setInt(30, 1000); // merchant_id
-            inPstmt.setString(31, "Thomas Jefferson and James Madison met in 1776. Could it have been any other year? They worked together starting then to further American Revolution and later to shape the new scheme of government. From the work sprang a friendship perhaps incomparable in intimacy1 and the trustfulness of collaboration2 and induration. It lasted 50 years. It included pleasure and utility but over and above them, there were shared purpose, a common end and "); // merchant_name
+            inPstmt.setString(31, bigStr);
             inPstmt.setLong(32, 1); // merchant_cat
             inPstmt.setLong(33, 2); // merchant_cat_sub
             inPstmt.setString(34, "s1"); // store_id
-            inPstmt.setString(35, "Thomas Jefferson and James Madison met in 1776. Could it have been any other year? They worked together starting then to further American Revolution and later to shape the new scheme of government. From the work sprang a friendship perhaps incomparable in intimacy1 and the trustfulness of collaboration2 and induration. It lasted 50 years. It included pleasure and utility but over and above them, there were shared purpose, a common end and "); // store_name
+            inPstmt.setString(35, bigStr);
             inPstmt.setString(36, "pos1");// pos_id
             inPstmt.setLong(37, 1);// biller_id
-            inPstmt.setString(38, "Thomas Jefferson and James Madison met in 1776. Could it have been any other year? They worked together starting then to further American Revolution and later to shape the new scheme of government. From the work sprang a friendship perhaps incomparable in intimacy1 and the trustfulness of collaboration2 and induration. It lasted 50 years. It included pleasure and utility but over and above them, there were shared purpose, a common end and an enduring goodness on both sides. Four and a half months before he died, when he was ailing3, debt-ridden, and worried about his impoverished4 family, Jefferson wrote to his longtime friend. His words and Madison's reply remind us that friends are friends until death. They also remind us that sometimes a friendship has a bearing on things larger than the friendship itself, for has there ever been a friendship of greater public consequence than this one?Thomas Jefferson and James Madison met in 1776. Could it have been any other year? They worked together starting then to further American Revolution and later to shape the new scheme of government. From the work sprang a friendship perhaps incomparable in intimacy1 and the trustfulness of collaboration2 and induration. It lasted 50 years. It included pleasure and utility but over and above them, there were shared purpose, a common end and an enduring goodness on both sides. Four and a half months before he died, when he was ailing3, debt-ridden, and worried about his impoverished4 family, Jefferson wrote to his longtime friend. His words and Madison's reply remind us that friends are friends until death. They also remind us that sometimes a friendship has a bearing on things larger than the friendship itself, for has there ever been a friendship of greater public consequence than this one? ");// logo_url
+            inPstmt.setString(38, bigStr);
             inPstmt.setLong(39, 2);// peer_id
-            inPstmt.setString(40, "Thomas Jefferson and James Madison met in 1776. Could it have been any other year? They worked together starting then to further American Revolution and later to shape the new scheme of government. From the work sprang a friendship perhaps incomparable in intimacy1 and the trustfulness of collaboration2 and induration. It lasted 50 years. It included pleasure and utility but over and above them, there were shared purpose, a common end and ");// peer_name
-            inPstmt.setString(41, "Thomas Jefferson and James Madison met in 1776. Could it have been any other year? They worked together starting then to further American Revolution and later to shape the new scheme of government. From the work sprang a friendship perhaps incomparable in intimacy1 and the trustfulness of collaboration2 and induration. It lasted 50 years. It included pleasure and utility but over and above them, there were shared purpose, a common end and ");// device_id
+            inPstmt.setString(40, bigStr);
+            inPstmt.setString(41, bigStr);
             inPstmt.setString(42, "{}");// extra_info
 
             inPstmt.addBatch();
         }
         inPstmt.executeBatch();
-        inPstmt.clearBatch();
+//        inPstmt.clearBatch();
     }
+
+    private static String bigStr = "Thomas Jefferson and James Madison met in 1776. Could it have been any other year? They worked together starting then to further American Revolution and later to shape the new scheme of government. From the work sprang a friendship perhaps incomparable in intimacy1 and the trustfulness of collaboration2 and induration. It lasted 50 years. It included pleasure and utility but over and above them, there were shared purpose, a common end and "; // merchant_name
 }
