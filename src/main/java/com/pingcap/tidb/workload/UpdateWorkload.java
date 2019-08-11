@@ -12,13 +12,14 @@ public class UpdateWorkload {
 
 
     public static void main(String[] args) throws Exception {
+        String dbName = args[3];
         DbUtil.getInstance().initConnectionPool(
-            "jdbc:mysql://aa7e48fbcb9a811e9bc3e0e05a91079b-ed3b031e6d68faca.elb.ap-northeast-1.amazonaws.com:4000/test?useunicode=true&characterEncoding=utf8&rewriteBatchedStatements=true",
+            String.format("jdbc:mysql://aa7e48fbcb9a811e9bc3e0e05a91079b-ed3b031e6d68faca.elb.ap-northeast-1.amazonaws.com:4000/%s?useunicode=true&characterEncoding=utf8&rewriteBatchedStatements=true", dbName),
             "root", "");
         int workId = Integer.parseInt(args[0]);
         int concurrency = Integer.parseInt(args[1]);
         int repeat = Integer.parseInt(args[2]);
-        String tableName = args[3];
+        String tableName = args[4];
         new UpdateWorkload().updateTest(workId, concurrency, repeat, tableName);
     }
 
