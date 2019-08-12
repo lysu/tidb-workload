@@ -1,28 +1,23 @@
 package com.pingcap.tidb.workload;
 
+import com.pingcap.tidb.workload.utils.UidGenerator;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
-public class InsertWorkload {
+public class InsertWorkloadPayPay {
 
-    private static String dbName = null;
-    private static String tblName = null;
+    private static String dbName = "test";
+    private static String tblName = "txn_history";
+    final static UidGenerator uidGenerator = new UidGenerator(30, 20, 13);
+
     public static void main(String[] args) {
-        dbName = args[1];
-        tblName = args[2];
-        DbUtil.getInstance().initConnectionPool(String.format("jdbc:mysql://aa7e48fbcb9a811e9bc3e0e05a91079b-ed3b031e6d68faca.elb.ap-northeast-1.amazonaws.com:4000/%s?useunicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&useLocalSessionState=true", dbName), "root", "");
-        int concurrency=Integer.parseInt(args[0]);
-//        boolean update = "update".equalsIgnoreCase(args[1]);
-//        int concurrency = Integer.parseInt(args[2]);
-//        int repeat = Integer.parseInt(args[3]);
-//        new TestOld().test(workId, concurrency, repeat, update);
-
-//        int concurrency = Integer.parseInt(args[1]);
-        InsertWorkload.workload(concurrency);
+        DbUtil.getInstance().initConnectionPool(String.format("jdbc:mysql://aa7e48fbcb9a811e9bc3e0e05a91079b-ed3b031e6d68faca.elb.ap-northeast-1.amazonaws.com:4000/%s?useunicode=true&characterEncoding=utf8&useLocalSessionState=true", dbName), "root", "");
+        uidGenerator.setWorkerId(Integer.parseInt(args[0]));
+        int concurrency=Integer.parseInt(args[1]);
+        InsertWorkloadPayPay.workload(concurrency);
     }
 
     private static final String insertSQL =
@@ -41,6 +36,7 @@ public class InsertWorkload {
             "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), now(), ?, ?, ?, now(), now(), now(), ?, ?, ?, ?, ?, "
             +
             "?, ?, now(), now(), now(), ?, ?, ?, ?, ?, now(), now(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
 
     public static void workload(int concurrency) {
         CountDownLatch tmpwg = new CountDownLatch(concurrency);
@@ -86,12 +82,11 @@ public class InsertWorkload {
         }
     }
 
-    private static Random r = new Random();
-    public static int BATCH_SIZE = 200;
+    private static int BATCH_SIZE = 200;
     private static  void insert(PreparedStatement inPstmt)
         throws SQLException {
         for (int i = 0; i < BATCH_SIZE; i++) {
-            long txnId = r.nextLong();
+            long txnId = uidGenerator.getUID();
             long userId = txnId;
             long orderId = txnId;
 //            long paymentId = uidGenerator.getUID();
@@ -126,17 +121,17 @@ public class InsertWorkload {
             inPstmt.setString(28, "done"); // cb_state
             inPstmt.setInt(29, 1); // cb_version
             inPstmt.setInt(30, 1000); // merchant_id
-            inPstmt.setString(31, Utils.genRandStr(400));
+            inPstmt.setString(31, Utils.genRandStr(30));
             inPstmt.setLong(32, 1); // merchant_cat
             inPstmt.setLong(33, 2); // merchant_cat_sub
             inPstmt.setString(34, "s1"); // store_id
-            inPstmt.setString(35, Utils.genRandStr(400));
+            inPstmt.setString(35, Utils.genRandStr(10));
             inPstmt.setString(36, "pos1");// pos_id
             inPstmt.setLong(37, 1);// biller_id
-            inPstmt.setString(38, Utils.genRandStr(1800));
+            inPstmt.setString(38, Utils.genRandStr(10));
             inPstmt.setLong(39, 2);// peer_id
-            inPstmt.setString(40, Utils.genRandStr(400));
-            inPstmt.setString(41, Utils.genRandStr(400));
+            inPstmt.setString(40, Utils.genRandStr(10));
+            inPstmt.setString(41, Utils.genRandStr(10));
             inPstmt.setString(42, "{}");// extra_info
 
             inPstmt.addBatch();
@@ -144,4 +139,6 @@ public class InsertWorkload {
         inPstmt.executeBatch();
 //        inPstmt.clearBatch();
     }
+
+
 }

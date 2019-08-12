@@ -10,7 +10,7 @@ public class Main {
 //        boolean update = "update".equalsIgnoreCase(args[1]);
 //        int concurrency = Integer.parseInt(args[2]);
 //        int repeat = Integer.parseInt(args[3]);
-//        new Test().test(workId, concurrency, repeat, update);
+//        new TestOld().test(workId, concurrency, repeat, update);
 
 //        int concurrency = Integer.parseInt(args[1]);
         InsertWorkload.workload(concurrency);

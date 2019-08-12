@@ -1,26 +1,14 @@
 package com.pingcap.tidb.workload;
 
 import com.pingcap.tidb.workload.utils.UidGenerator;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.CountDownLatch;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import sun.nio.ch.IOUtil;
 
 
 public class RegionUpdateWorkload {
@@ -50,14 +38,14 @@ public class RegionUpdateWorkload {
 
         String dbName = args[0];
         String tblName = args[1];
-        JSONObject json = new JSONObject(get(String.format("http://aa7e48fbcb9a811e9bc3e0e05a91079b-ed3b031e6d68faca.elb.ap-northeast-1.amazonaws.com:10080/tables/%s/%s/regions", dbName, tblName)));
+        JSONObject json = new JSONObject(Utils.get(String.format("http://aa7e48fbcb9a811e9bc3e0e05a91079b-ed3b031e6d68faca.elb.ap-northeast-1.amazonaws.com:10080/tables/%s/%s/regions", dbName, tblName)));
         JSONArray regions = json.getJSONArray("record_regions");
 
         JSONArray detail = new JSONArray();
         for(int i=0;i<regions.length();i++) {
             JSONObject region = regions.getJSONObject(i);
             int regionId = region.getInt("region_id");
-            JSONObject regionInfo = new JSONObject(get(String.format("http://aa7e48fbcb9a811e9bc3e0e05a91079b-ed3b031e6d68faca.elb.ap-northeast-1.amazonaws.com:10080/regions/%s", regionId)));
+            JSONObject regionInfo = new JSONObject(Utils.get(String.format("http://aa7e48fbcb9a811e9bc3e0e05a91079b-ed3b031e6d68faca.elb.ap-northeast-1.amazonaws.com:10080/regions/%s", regionId)));
             detail.put(regionInfo);
         }
         String str = detail.toString();
@@ -270,69 +258,4 @@ public class RegionUpdateWorkload {
             }
         }
     }
-
-    private static String readFile(String path) {
-        try{
-           StringBuilder sb = new StringBuilder();
-            char[] buf = new char[4096];
-            BufferedReader br = new BufferedReader(new FileReader(path));
-            int i=br.read(buf);
-            while (i>0) {
-                sb.append(buf, 0, i);
-                i = br.read(buf);
-            }
-            return sb.toString();
-        }catch (Exception e) {
-            e.printStackTrace();
-            System.exit(0);
-        }
-        return null;
-    }
-
-    private static String get(String httpurl) {
-        HttpURLConnection connection = null;
-        InputStream is = null;
-        BufferedReader br = null;
-        String result = null;//
-        try {
-            URL url = new URL(httpurl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(15000);
-            connection.setReadTimeout(60000);
-            connection.connect();
-            if (connection.getResponseCode() == 200) {
-                is = connection.getInputStream();
-                br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-                StringBuilder sbf = new StringBuilder();
-                String temp = null;
-                while ((temp = br.readLine()) != null) {
-                    sbf.append(temp);
-                    sbf.append("\r\n");
-                }
-                result = sbf.toString();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (null != br) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (null != is) {
-                try {
-                    is.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            connection.disconnect();// 关闭远程连接
-        }
-
-        return result;
-    }
-
 }
