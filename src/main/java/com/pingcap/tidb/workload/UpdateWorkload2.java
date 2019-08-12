@@ -8,7 +8,7 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 
-public class UpdateWorkload {
+public class UpdateWorkload2 {
 
 
     public static void main(String[] args) throws Exception {
@@ -20,7 +20,7 @@ public class UpdateWorkload {
         int concurrency = Integer.parseInt(args[1]);
         int repeat = Integer.parseInt(args[2]);
         String tableName = args[4];
-        new UpdateWorkload().updateTest(workId, concurrency, repeat, tableName);
+        new UpdateWorkload2().updateTest(workId, concurrency, repeat, tableName);
     }
 
 
